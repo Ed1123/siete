@@ -33,9 +33,10 @@ class Game:
         self.pot = 0
         self.players = {order: Player(order) for order in range(self.number_of_players)}
 
-    def round(self, current_player: Player, next_player: Player) -> Player | None:
+    def turn(self, current_player: Player, next_player: Player) -> Player | None:
         '''Simulates a round and returns the next player. Returns None if there is a winner.'''
         if current_player.won:
+            self.winner = current_player
             return
 
         dice = roll_two_dice()
@@ -49,6 +50,16 @@ class Game:
             # Dice number in current player hand
             current_player.hand.remove(dice)
             return current_player
+
+    def start(self):
+        first_player = self.players[1]
+        second_player = self.players[2]
+        next_player = self.turn(first_player, second_player)
+        while next_player is not None:
+            next_player = self.turn(first_player, second_player)
+
+    def print_results(self):
+        print(f'Player {self.winner.order} won {self.pot}!')
 
 
 def main():
