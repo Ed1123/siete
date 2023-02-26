@@ -1,5 +1,5 @@
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 NUMBER_OF_PLAYERS = 6
 MONEY_NUMBER = 7
@@ -9,7 +9,7 @@ POT_INCREMENT = 0.1
 @dataclass
 class Player:
     order: int
-    hand: set = set()
+    hand: set = field(default_factory=lambda: {2, 3, 4, 5, 6, 8, 9, 10, 11, 12})
 
     def won(self):
         return len(self.hand) == 0
@@ -26,8 +26,6 @@ def roll_two_dice() -> int:
 
 
 class Game:
-    initial_hand = {2, 3, 4, 5, 6, 8, 9, 10, 11, 12}
-
     def __init__(self, number_of_players: int) -> None:
         self.number_of_players = number_of_players
         self.pot = 0
@@ -40,14 +38,20 @@ class Game:
             return
 
         dice = roll_two_dice()
+        print(f'Dices marked: {dice}')
         if dice == MONEY_NUMBER:
+            print(f'Player {current_player.order} has to increase the pot.')
             self.pot += POT_INCREMENT
             return next_player
-        if dice not in current_player.hand and dice in next_player.hand:
+        elif dice not in current_player.hand and dice in next_player.hand:
+            print(
+                f'Player {current_player.order} has not the card and next player have it. Turn ended.'
+            )
             next_player.hand.remove(dice)
             return next_player
         else:
             # Dice number in current player hand
+            print(f'Player {current_player.order} has the card. Repeats the turn.')
             current_player.hand.remove(dice)
             return current_player
 
@@ -55,7 +59,9 @@ class Game:
         first_player = self.players[1]
         second_player = self.players[2]
         next_player = self.turn(first_player, second_player)
+        self.round_number = 1
         while next_player is not None:
+            print(f'Round {self.round_number}')
             next_player = self.turn(first_player, second_player)
 
     def print_results(self):
@@ -64,6 +70,7 @@ class Game:
 
 def main():
     game = Game(NUMBER_OF_PLAYERS)
+    game.start()
 
 
 if __name__ == '__main__':
