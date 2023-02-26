@@ -90,6 +90,15 @@ class Game:
         print(f'Player {self.winner.order} won {self.pot:.2f}!')
 
 
+def simulate_games(n_games: int, n_players: int) -> list[Game]:
+    games = []
+    for _ in range(n_games):
+        game = Game(n_players)
+        game.start()
+        games.append(game)
+    return games
+
+
 def main():
     game = Game(NUMBER_OF_PLAYERS)
     game.start()
