@@ -29,11 +29,15 @@ class Game:
     def __init__(self, number_of_players: int) -> None:
         self.number_of_players = number_of_players
         self.pot = 0
-        self.players = {order: Player(order) for order in range(self.number_of_players)}
+        self.players = {
+            order: Player(order) for order in range(1, self.number_of_players + 1)
+        }
 
-    def turn(self, current_player: Player, next_player: Player) -> Player | None:
-        '''Simulates a round and returns the next player. Returns None if there is a winner.'''
-        if current_player.won:
+    def turn(
+        self, current_player: Player, next_player: Player
+    ) -> tuple[Player, Player] | None:
+        '''Simulates a round and returns the next pair of players. Returns None if there is a winner.'''
+        if current_player.won():
             self.winner = current_player
             return
 
@@ -42,35 +46,54 @@ class Game:
         if dice == MONEY_NUMBER:
             print(f'Player {current_player.order} has to increase the pot.')
             self.pot += POT_INCREMENT
-            return next_player
-        elif dice not in current_player.hand and dice in next_player.hand:
-            print(
-                f'Player {current_player.order} has not the card and next player have it. Turn ended.'
-            )
-            next_player.hand.remove(dice)
-            return next_player
+            return next_player, self._get_next_player(next_player)
+        elif dice not in current_player.hand:
+            # Player has not the number in hand
+            if dice in next_player.hand:
+                # Next player has it
+                print(
+                    f'Player {current_player.order} has not the card and next player have it. Turn ended.'
+                )
+                next_player.hand.remove(dice)
+                return next_player, self._get_next_player(next_player)
+            else:
+                # Next player doesn't have it
+                print(
+                    f'Player {current_player.order} has not the card, but neither next player. Plays again.'
+                )
         else:
-            # Dice number in current player hand
-            print(f'Player {current_player.order} has the card. Repeats the turn.')
+            # Player has the number in hand
+            print(f'Player {current_player.order} has the card. Plays again.')
             current_player.hand.remove(dice)
-            return current_player
+        return current_player, next_player
+
+    def _get_next_player(self, player: Player):
+        order = player.order % self.number_of_players + 1
+        return self.players[order]
 
     def start(self):
-        first_player = self.players[1]
-        second_player = self.players[2]
-        next_player = self.turn(first_player, second_player)
+        current_player = self.players[1]
+        next_player = self.players[2]
         self.round_number = 1
-        while next_player is not None:
-            print(f'Round {self.round_number}')
-            next_player = self.turn(first_player, second_player)
+        print(f'Round {self.round_number}')
+        print(f'Pot {self.pot:.2f}')
+        next_turn = self.turn(current_player, next_player)
+        self.round_number += 1
+        while next_turn is not None:
+            current_player, next_player = next_turn
+            print(f'\nRound {self.round_number}')
+            print(f'Pot {self.pot:.2f}')
+            next_turn = self.turn(current_player, next_player)
+            self.round_number += 1
 
     def print_results(self):
-        print(f'Player {self.winner.order} won {self.pot}!')
+        print(f'Player {self.winner.order} won {self.pot:.2f}!')
 
 
 def main():
     game = Game(NUMBER_OF_PLAYERS)
     game.start()
+    game.print_results()
 
 
 if __name__ == '__main__':
