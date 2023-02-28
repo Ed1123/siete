@@ -1,3 +1,4 @@
+import logging
 import random
 from dataclasses import dataclass, field
 
@@ -42,28 +43,28 @@ class Game:
             return
 
         dice = roll_two_dice()
-        print(f'Dices marked: {dice}')
+        logging.info(f'Dices marked: {dice}')
         if dice == MONEY_NUMBER:
-            print(f'Player {current_player.order} has to increase the pot.')
+            logging.info(f'Player {current_player.order} has to increase the pot.')
             self.pot += POT_INCREMENT
             return next_player, self._get_next_player(next_player)
         elif dice not in current_player.hand:
             # Player has not the number in hand
             if dice in next_player.hand:
                 # Next player has it
-                print(
+                logging.info(
                     f'Player {current_player.order} has not the card and next player have it. Turn ended.'
                 )
                 next_player.hand.remove(dice)
                 return next_player, self._get_next_player(next_player)
             else:
                 # Next player doesn't have it
-                print(
+                logging.info(
                     f'Player {current_player.order} has not the card, but neither next player. Plays again.'
                 )
         else:
             # Player has the number in hand
-            print(f'Player {current_player.order} has the card. Plays again.')
+            logging.info(f'Player {current_player.order} has the card. Plays again.')
             current_player.hand.remove(dice)
         return current_player, next_player
 
@@ -75,22 +76,23 @@ class Game:
         current_player = self.players[1]
         next_player = self.players[2]
         self.round_number = 1
-        print(f'Round {self.round_number}')
-        print(f'Pot {self.pot:.2f}')
+        logging.info(f'Round {self.round_number}')
+        logging.info(f'Pot {self.pot:.2f}')
         next_turn = self.turn(current_player, next_player)
         self.round_number += 1
         while next_turn is not None:
             current_player, next_player = next_turn
-            print(f'\nRound {self.round_number}')
-            print(f'Pot {self.pot:.2f}')
+            logging.info(f'\nRound {self.round_number}')
+            logging.info(f'Pot {self.pot:.2f}')
             next_turn = self.turn(current_player, next_player)
             self.round_number += 1
 
     def print_results(self):
-        print(f'Player {self.winner.order} won {self.pot:.2f}!')
+        logging.info(f'Player {self.winner.order} won {self.pot:.2f}!')
 
 
 def simulate_games(n_games: int, n_players: int) -> list[Game]:
+    logging.basicConfig(level=logging.CRITICAL)
     games = []
     for _ in range(n_games):
         game = Game(n_players)
@@ -100,6 +102,7 @@ def simulate_games(n_games: int, n_players: int) -> list[Game]:
 
 
 def main():
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
     game = Game(NUMBER_OF_PLAYERS)
     game.start()
     game.print_results()
