@@ -1,5 +1,6 @@
 import logging
 import random
+from concurrent import futures
 from dataclasses import dataclass, field
 
 NUMBER_OF_PLAYERS = 6
@@ -86,19 +87,34 @@ class Game:
             logging.info(f'Pot {self.pot:.2f}')
             next_turn = self.turn(current_player, next_player)
             self.round_number += 1
+        return self
 
     def print_results(self):
         logging.info(f'Player {self.winner.order} won {self.pot:.2f}!')
 
 
-def simulate_games(n_games: int, n_players: int) -> list[Game]:
+def simulate_games_multiprocess(n_games: int, n_players: int) -> list[Game]:
     logging.basicConfig(level=logging.CRITICAL)
-    games = []
-    for _ in range(n_games):
-        game = Game(n_players)
-        game.start()
-        games.append(game)
-    return games
+    with futures.ProcessPoolExecutor() as executor:
+        futures_ = []
+        for _ in range(n_games):
+            game = Game(n_players)
+            future = executor.submit(game.start)
+            futures_.append(future)
+        futures.as_completed(futures_)
+        return [future.result() for future in futures.as_completed(futures_)]
+
+
+def simulate_games_multithread(n_games: int, n_players: int) -> list[Game]:
+    logging.basicConfig(level=logging.CRITICAL)
+    with futures.ThreadPoolExecutor() as executor:
+        futures_ = []
+        for _ in range(n_games):
+            game = Game(n_players)
+            future = executor.submit(game.start)
+            futures_.append(future)
+        futures.as_completed(futures_)
+        return [future.result() for future in futures.as_completed(futures_)]
 
 
 def main():
